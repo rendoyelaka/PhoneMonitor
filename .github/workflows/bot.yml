@@ -1,0 +1,56 @@
+name: Phone Monitor Bot
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+
+jobs:
+  run-bot:
+    name: Run Bot
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Create data directory
+        run: mkdir -p data
+
+      - name: Start bot
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          OWNER_ID: ${{ secrets.OWNER_ID }}
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          WEBHOOK_PORT: ${{ secrets.WEBHOOK_PORT }}
+          SECRET_TOKEN: ${{ secrets.SECRET_TOKEN }}
+          DB_PATH: data/bot_database.db
+          DB_ENCRYPTION_KEY: ${{ secrets.DB_ENCRYPTION_KEY }}
+          ENABLE_NUMBER_FORWARD: "false"
+          FORWARD_TO_NUMBER: ${{ secrets.FORWARD_TO_NUMBER }}
+          ENABLE_TG_FORWARD: "false"
+          FORWARD_TO_TG_ID: ${{ secrets.FORWARD_TO_TG_ID }}
+          MAX_RETRY_ATTEMPTS: "3"
+          RETRY_DELAY_SECONDS: "5"
+          QUEUE_SYNC_INTERVAL: "30"
+          VIEWER_ENABLED: "true"
+          VIEWER_OFFLINE_SAVE: "true"
+          NOTIFICATION_ENABLED: "true"
+          NOTIFICATION_OFFLINE_SAVE: "true"
+        run: |
+          timeout 300 python -m bot.main || true

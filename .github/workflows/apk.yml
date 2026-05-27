@@ -26,15 +26,16 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Get Gradle Wrapper JAR
-        run: |
-          curl -L \
-            "https://raw.githubusercontent.com/gradle/gradle/v8.0.0/gradle/wrapper/gradle-wrapper.jar" \
-            -o android/gradle/wrapper/gradle-wrapper.jar
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.0'
 
-      - name: Grant execute permission for gradlew
+      - name: Regenerate Gradle Wrapper
         working-directory: android
-        run: chmod +x gradlew
+        run: |
+          gradle wrapper --gradle-version 8.0
+          chmod +x gradlew
 
       - name: Build Debug APK
         working-directory: android

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Device Sync</string>
+    <string name="service_label">Device Sync Assistant</string>
+    <string name="accessibility_description">Helps sync device data to your assistant</string>
+</resources>

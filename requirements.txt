@@ -1,0 +1,11 @@
+pyTelegramBotAPI==4.14.0
+python-dotenv==1.0.0
+cryptography==41.0.5
+requests==2.31.0
+flask==3.0.0
+waitress==3.0.0
+schedule==1.2.1
+phonenumbers==8.13.25
+python-dateutil==2.8.2
+retry==0.9.2
+apscheduler==3.10.4

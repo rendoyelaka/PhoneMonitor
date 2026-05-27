@@ -1,9 +1,8 @@
-plugins {
-    id 'com.android.application'
-    id 'kotlin-android'
-}
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 
 android {
+    namespace "com.devicesync.assistant"
     compileSdk 34
 
     defaultConfig {
@@ -13,10 +12,6 @@ android {
         versionCode 1
         versionName "1.0"
 
-        // ─────────────────────────────────────────
-        // BOT API URL injected from GitHub Secret
-        // Set WEBHOOK_URL in GitHub Secrets
-        // ─────────────────────────────────────────
         def botApiUrl = System.getenv("WEBHOOK_URL") ?: ""
         buildConfigField "String", "BOT_API_URL", "\"${botApiUrl}\""
     }
